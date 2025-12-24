@@ -1,4 +1,18 @@
 declare global {
+	namespace runtime {
+		/**
+		 * Current OS name (from Go).
+		 */
+		export const os: string;
+		/**
+		 * Current ARCH name (from Go).
+		 */
+		export const arch: string;
+		/**
+		 * Program arguments passed from command line.
+		 */
+		export const args: string[];
+	}
 	namespace io {
 		export class Reader {}
 	}

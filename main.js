@@ -5,6 +5,7 @@ async function main() {
 	console.log(fs.fileExists('/etc/hosts', 'f'))
 	console.log(fs.fileExists('/etc/hosts', 'fx'))
 	console.log(fs.fileExists('/bin/ls', 'fx'))
+	console.log(runtime.args);
 }
 
 main()
