@@ -57,7 +57,9 @@ declare global {
 			run(): Promise<void>;
 			useStd(stdin: boolean, stdout: boolean, stderr: boolean);
 		}
+		function $(literals: TemplateStringsArray, ...interpolates: any[]): Command;
 	}
+	function $(literals: TemplateStringsArray, ...interpolates: any[]): exec.Command;
 	namespace http {
 		export class Response {
 			text(): Promise<string>;

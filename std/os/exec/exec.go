@@ -12,6 +12,7 @@ import (
 
 var Methods = map[string]any{
 	`Command`: command,
+	`$`:       taggedCommand,
 }
 
 type Command struct {

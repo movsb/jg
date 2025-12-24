@@ -52,7 +52,7 @@ func (r *Runtime) RunAsync(fn func(rt *goja.Runtime)) {
 }
 
 // arguments 被设置到全局，执行完成后删除。
-func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argument) (_ goja.Value, outErr error) {
+func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argument) (_ any, outErr error) {
 	var val goja.Value
 	var err error
 
@@ -71,7 +71,11 @@ func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argum
 		val, err = r.RunString(script)
 	})
 
-	return val, err
+	if err != nil {
+		return nil, err
+	}
+
+	return val.Export(), nil
 }
 
 func (r *Runtime) WaitForPromise(p *goja.Promise) {

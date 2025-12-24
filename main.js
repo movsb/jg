@@ -1,11 +1,4 @@
-async function main() {
-	console.log(fs.fileExists('/', 'd'))
-	console.log(fs.fileExists('/', 'f'))
-	console.log(fs.fileExists('/etc/hosts', 'd'))
-	console.log(fs.fileExists('/etc/hosts', 'f'))
-	console.log(fs.fileExists('/etc/hosts', 'fx'))
-	console.log(fs.fileExists('/bin/ls', 'fx'))
-	console.log(runtime.args);
-}
-
-main()
+const a = 1;
+const cmd = $`echo 1 ${a+a} bbb`;
+cmd.useStd(false, true, true);
+cmd.run()

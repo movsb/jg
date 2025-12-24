@@ -12,4 +12,5 @@ require (
 	github.com/go-sourcemap/sourcemap v2.1.4+incompatible // indirect
 	github.com/google/pprof v0.0.0-20251213031049-b05bdaca462f // indirect
 	golang.org/x/text v0.32.0 // indirect
+	mvdan.cc/sh/v3 v3.12.0 // indirect
 )

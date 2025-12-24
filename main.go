@@ -30,6 +30,7 @@ func main() {
 		rt.Set(`fs`, jg_fs.Methods)
 		rt.Set(`path`, &jg_path.Path{})
 		rt.Set(`exec`, jg_exec.Methods)
+		rt.Set(`$`, jg_exec.Methods[`$`])
 		rt.Set(`archive`, &jg_archive.Methods)
 	})
 
@@ -43,21 +44,15 @@ func main() {
 		panic(err)
 	}
 
-	var promise *goja.Promise
-
-	rt.Run(func(rt *goja.Runtime) {
-		p, err := rt.RunString(string(all))
-		if err != nil {
-			panic(rt.ToValue(err))
-		}
-		promise, _ = p.Export().(*goja.Promise)
-	})
-
-	if promise != nil {
-		rt.WaitForPromise(promise)
+	output, err := rt.Execute(context.Background(), string(all))
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	if promise.State() == goja.PromiseStateRejected {
-		log.Println(promise.Result())
+	if promise, ok := output.(*goja.Promise); ok {
+		rt.WaitForPromise(promise)
+		if promise.State() == goja.PromiseStateRejected {
+			log.Println(promise.Result())
+		}
 	}
 }
