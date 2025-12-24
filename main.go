@@ -8,6 +8,7 @@ import (
 
 	"github.com/dop251/goja"
 	loop "github.com/movsb/jg/runtime"
+	jg_archive "github.com/movsb/jg/std/archive"
 	jg_fs "github.com/movsb/jg/std/fs"
 	jg_http "github.com/movsb/jg/std/http"
 	jg_exec "github.com/movsb/jg/std/os/exec"
@@ -29,6 +30,7 @@ func main() {
 		rt.Set(`fs`, &jg_fs.Methods)
 		rt.Set(`path`, &jg_path.Path{})
 		rt.Set(`exec`, &jg_exec.Exec{})
+		rt.Set(`archive`, &jg_archive.Methods)
 	})
 
 	fp, err := os.Open(`main.js`)

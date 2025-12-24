@@ -5,6 +5,12 @@ declare global {
 	namespace fs {
 		function saveToFile(filePath: string, data: io.Reader): Promise<number>;
 	}
+	namespace archive {
+		export class TarReader {
+			constructor(input: io.Reader);
+			extractTo(dir: string): Promise<void>;
+		}
+	}
 	namespace http {
 		export class Response {
 			text(): Promise<string>;
