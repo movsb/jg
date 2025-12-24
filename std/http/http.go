@@ -21,6 +21,10 @@ type Response struct {
 	Status     string
 }
 
+func (r *Response) Reader(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	return vm.ToValue(r.r.Body)
+}
+
 func (r *Response) Text(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	async := loop.GetRunAsync(vm)
 	promise, resolve, reject := vm.NewPromise()

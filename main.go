@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 	"os"
 
 	"github.com/dop251/goja"
 	loop "github.com/movsb/jg/runtime"
+	jg_fs "github.com/movsb/jg/std/fs"
 	jg_http "github.com/movsb/jg/std/http"
 	jg_exec "github.com/movsb/jg/std/os/exec"
 	jg_path "github.com/movsb/jg/std/path"
@@ -24,6 +26,7 @@ func main() {
 	rt.Run(func(rt *goja.Runtime) {
 		rt.Set(`runtime`, &jg_runtime.Map)
 		rt.Set(`http`, &jg_http.Methods)
+		rt.Set(`fs`, &jg_fs.Methods)
 		rt.Set(`path`, &jg_path.Path{})
 		rt.Set(`exec`, &jg_exec.Exec{})
 	})
@@ -50,5 +53,9 @@ func main() {
 
 	if promise != nil {
 		rt.WaitForPromise(promise)
+	}
+
+	if promise.State() == goja.PromiseStateRejected {
+		log.Println(promise.Result())
 	}
 }
