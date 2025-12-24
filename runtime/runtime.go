@@ -1,4 +1,4 @@
-package main
+package loop
 
 import (
 	"context"
@@ -8,16 +8,20 @@ import (
 	"github.com/dop251/goja_nodejs/eventloop"
 )
 
+func GetRunAsync(vm *goja.Runtime) func(func(vm *goja.Runtime)) {
+	rt := vm.Get(`__loop`).Export().(*Runtime)
+	return rt.RunAsync
+}
+
 // JavaScript 运行时，必要时移出去作为公共模块。
 type Runtime struct {
 	ev *eventloop.EventLoop
 }
 
 func NewRuntime(ctx context.Context, libs ...[]byte) (*Runtime, error) {
-	ev := eventloop.NewEventLoop()
-	ev.Start()
+	rt := &Runtime{ev: eventloop.NewEventLoop()}
 
-	run(ev, func(r *goja.Runtime) {
+	rt.Run(func(r *goja.Runtime) {
 		console.Enable(r)
 		for _, lib := range libs {
 			_, err := r.RunString(string(lib))
@@ -27,17 +31,11 @@ func NewRuntime(ctx context.Context, libs ...[]byte) (*Runtime, error) {
 		}
 	})
 
-	return &Runtime{ev: ev}, nil
-
-}
-
-func run(ev *eventloop.EventLoop, fn func(r *goja.Runtime)) {
-	wait := make(chan struct{})
-	ev.RunOnLoop(func(r *goja.Runtime) {
-		defer close(wait)
-		fn(r)
+	rt.Run(func(r *goja.Runtime) {
+		r.Set(`__loop`, rt)
 	})
-	<-wait
+
+	return rt, nil
 }
 
 type Argument struct {
@@ -46,7 +44,11 @@ type Argument struct {
 }
 
 func (r *Runtime) Run(fn func(rt *goja.Runtime)) {
-	run(r.ev, fn)
+	r.ev.Run(fn)
+}
+
+func (r *Runtime) RunAsync(fn func(rt *goja.Runtime)) {
+	r.ev.RunOnLoop(fn)
 }
 
 // arguments 被设置到全局，执行完成后删除。
@@ -54,7 +56,7 @@ func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argum
 	var val goja.Value
 	var err error
 
-	run(r.ev, func(r *goja.Runtime) {
+	r.Run(func(r *goja.Runtime) {
 		for _, arg := range arguments {
 			if err := r.Set(arg.Name, arg.Value); err != nil {
 				panic(err)
@@ -70,4 +72,14 @@ func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argum
 	})
 
 	return val, err
+}
+
+func (r *Runtime) WaitForPromise(p *goja.Promise) {
+	var timer *eventloop.Interval
+	timer = r.ev.SetInterval(func(rt *goja.Runtime) {
+		if p.State() != goja.PromiseStatePending {
+			r.ev.ClearInterval(timer)
+		}
+	}, 100)
+	r.ev.Run(func(r *goja.Runtime) {})
 }

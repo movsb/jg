@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"io"
-	"log"
 	"os"
 
 	"github.com/dop251/goja"
+	loop "github.com/movsb/jg/runtime"
 	jg_http "github.com/movsb/jg/std/http"
 	jg_exec "github.com/movsb/jg/std/os/exec"
 	jg_path "github.com/movsb/jg/std/path"
@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	rt, err := NewRuntime(context.Background())
+	rt, err := loop.NewRuntime(context.Background())
 	if err != nil {
 		panic(err)
 	}
@@ -38,10 +38,17 @@ func main() {
 		panic(err)
 	}
 
-	val, err := rt.Execute(context.Background(), string(all))
-	if err != nil {
-		log.Fatalln(err)
+	var promise *goja.Promise
+
+	rt.Run(func(rt *goja.Runtime) {
+		p, err := rt.RunString(string(all))
+		if err != nil {
+			panic(rt.ToValue(err))
+		}
+		promise, _ = p.Export().(*goja.Promise)
+	})
+
+	if promise != nil {
+		rt.WaitForPromise(promise)
 	}
-	// log.Println(val.Export())
-	_ = val
 }

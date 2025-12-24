@@ -1,3 +1,9 @@
-/** @type {ArrayBuffer} */
-const blob = http.get('http://baidu.com').blob();
-console.log(blob.byteLength);
+// @ts-check
+
+async function main() {
+	const rsp = await http.get('http://baidu.com');
+	const text = await rsp.text();
+	console.log('length:', text);
+}
+
+main()
