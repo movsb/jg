@@ -25,11 +25,11 @@ func main() {
 		rt.SetFieldNameMapper(goja.UncapFieldNameMapper())
 	})
 	rt.Run(func(rt *goja.Runtime) {
-		rt.Set(`runtime`, &jg_runtime.Map)
-		rt.Set(`http`, &jg_http.Methods)
-		rt.Set(`fs`, &jg_fs.Methods)
+		rt.Set(`runtime`, jg_runtime.Map)
+		rt.Set(`http`, jg_http.Methods)
+		rt.Set(`fs`, jg_fs.Methods)
 		rt.Set(`path`, &jg_path.Path{})
-		rt.Set(`exec`, &jg_exec.Exec{})
+		rt.Set(`exec`, jg_exec.Methods)
 		rt.Set(`archive`, &jg_archive.Methods)
 	})
 

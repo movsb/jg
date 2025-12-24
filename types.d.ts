@@ -11,6 +11,13 @@ declare global {
 			extractTo(dir: string): Promise<void>;
 		}
 	}
+	namespace exec {
+		export class Command {
+			constructor(cmd: string, ...args: string[]);
+			run(): Promise<void>;
+			useStd(stdin: boolean, stdout: boolean, stderr: boolean);
+		}
+	}
 	namespace http {
 		export class Response {
 			text(): Promise<string>;

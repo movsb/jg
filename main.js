@@ -1,10 +1,9 @@
 // @ts-check
 
 async function main() {
-	const rsp = await http.get('http://localhost:4637');
-	const body = rsp.reader();
-	const tr = new archive.TarReader(body);
-	return tr.extractTo('/tmp');
+	const cmd = new exec.Command('ls', '/');
+	cmd.useStd(false, true, true);
+	return await cmd.run();
 }
 
 main()
