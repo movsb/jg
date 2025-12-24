@@ -4,6 +4,32 @@ declare global {
 	}
 	namespace fs {
 		function saveToFile(filePath: string, data: io.Reader): Promise<number>;
+		/**
+		 * Checks if the specified file or directory exists.
+		 * 
+		 * @param filePath 
+		 */
+		function fileExists(filePath: string): boolean;
+		/**
+		 * Checks if the specified file or directory exists.
+		 * 
+		 * @param filePath 
+		 * @param types     File types to match.
+		 * 
+		 * e.g: 'fd' means either file or directory exists. 'fx' means file exists and executable.
+		 * 
+		 *  OR-ed
+		 *      - 'f' file
+		 *      - 'd' directory
+		 *      - 'l' soft link
+		 *      - 's' socket
+		 * 
+		 *  AND-ed
+		 *      - 'x' executable
+		 *      - 'w' writable
+		 *      - 'r' readable
+		 */
+		function fileExists(filePath: string, types: string): boolean;
 	}
 	namespace archive {
 		export class TarReader {

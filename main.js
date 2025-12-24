@@ -1,9 +1,10 @@
-// @ts-check
-
 async function main() {
-	const cmd = new exec.Command('ls', '/');
-	cmd.useStd(false, true, true);
-	return await cmd.run();
+	console.log(fs.fileExists('/', 'd'))
+	console.log(fs.fileExists('/', 'f'))
+	console.log(fs.fileExists('/etc/hosts', 'd'))
+	console.log(fs.fileExists('/etc/hosts', 'f'))
+	console.log(fs.fileExists('/etc/hosts', 'fx'))
+	console.log(fs.fileExists('/bin/ls', 'fx'))
 }
 
 main()

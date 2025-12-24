@@ -3,6 +3,7 @@ package jg_fs
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 
 	"github.com/dop251/goja"
@@ -12,6 +13,8 @@ import (
 
 var Methods = map[string]any{
 	`saveToFile`: saveToFile,
+
+	`fileExists`: fileExists,
 }
 
 func saveToFile(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
@@ -53,4 +56,49 @@ func saveToFile(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	}()
 
 	return vm.ToValue(promise)
+}
+
+func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	filePath := utils.MustBeString(call.Argument(0), vm)
+
+	var types string
+
+	if len(call.Arguments) >= 2 {
+		types = utils.MustBeString(call.Argument(1), vm)
+	} else {
+		types = `fd`
+	}
+
+	stat, err := os.Stat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return vm.ToValue(false)
+		}
+		panic(vm.ToValue(fmt.Errorf(`判断存在时出错：%s: %w`, filePath, err)))
+	}
+
+	orMatch := false
+	andMatch := true
+
+	for _, t := range types {
+		switch t {
+		case 'f':
+			orMatch = orMatch || stat.Mode().IsRegular()
+		case 'd':
+			orMatch = orMatch || stat.IsDir()
+		case 'l':
+			orMatch = orMatch || (stat.Mode().Type()&fs.ModeSymlink > 0)
+		case 's':
+			orMatch = orMatch || (stat.Mode().Type()&fs.ModeSocket > 0)
+
+		case 'x':
+			andMatch = andMatch && (stat.Mode().Perm()&0b001 > 0)
+		case 'r':
+			andMatch = andMatch && (stat.Mode().Perm()&0b010 > 0)
+		case 'w':
+			andMatch = andMatch && (stat.Mode().Perm()&0b100 > 0)
+		}
+	}
+
+	return vm.ToValue(orMatch && andMatch)
 }
