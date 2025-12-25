@@ -19,6 +19,8 @@ type Response struct {
 
 	StatusCode int
 	Status     string
+
+	Ok bool
 }
 
 func (r *Response) Reader(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
@@ -70,6 +72,7 @@ func NewResponse(r *http.Response) *Response {
 		r:          r,
 		Status:     r.Status,
 		StatusCode: r.StatusCode,
+		Ok:         200 <= r.StatusCode && r.StatusCode < 300,
 	}
 	return rr
 }

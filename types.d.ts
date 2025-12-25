@@ -58,6 +58,14 @@ declare global {
 		 *      - 'r' readable
 		 */
 		function fileExists(filePath: string, types: string): boolean;
+		/**
+		 * Calculates the sha256 sum of a file.
+		 * 
+		 * @param filePath
+		 * 
+		 * @returns the digest of the file with each byte represented by two lower-cased letters.
+		 */
+		function sha256(filePath: string): Promise<string>;
 	}
 	namespace archive {
 		export class TarReader {
@@ -80,6 +88,19 @@ declare global {
 	function $(literals: TemplateStringsArray, ...interpolates: any[]): exec.Command;
 	namespace http {
 		export class Response {
+			/**
+			 * 200 OK
+			 */
+			readonly status: string;
+			/**
+			 * 200
+			 */
+			readonly statusCode: number;
+			/**
+			 * statusCode in [200,300).
+			 */
+			readonly ok: boolean;
+
 			text(): Promise<string>;
 			blob(): Promise<ArrayBuffer>;
 			reader(): io.Reader;

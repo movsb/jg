@@ -15,6 +15,8 @@ var Methods = map[string]any{
 	`saveToFile`: saveToFile,
 
 	`fileExists`: fileExists,
+
+	`sha256`: sha256sum,
 }
 
 func saveToFile(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
