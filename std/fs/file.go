@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/dop251/goja"
-	loop "github.com/movsb/jg/runtime"
+	"github.com/movsb/jg/runtime/loop"
 	"github.com/movsb/jg/utils"
 )
 

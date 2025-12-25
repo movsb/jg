@@ -21,3 +21,14 @@ func MustBeString(value goja.Value, vm *goja.Runtime) string {
 func MustBeBoolean(value goja.Value, vm *goja.Runtime) bool {
 	return MustBe[bool](value, reflect.Bool, vm)
 }
+
+func Must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Must1[T any](t T, err error) T {
+	Must(err)
+	return t
+}

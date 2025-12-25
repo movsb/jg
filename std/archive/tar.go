@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	"github.com/dop251/goja"
-	loop "github.com/movsb/jg/runtime"
+	"github.com/movsb/jg/runtime/loop"
 	"github.com/movsb/jg/utils"
 )
 
@@ -49,8 +49,7 @@ func (tr *TarReader) ExtractTo(call goja.FunctionCall, vm *goja.Runtime) goja.Va
 		panic(vm.ToValue(fmt.Errorf(`不是目录：%s`, outputDir)))
 	}
 
-	async := loop.GetRunAsync(vm)
-	promise, resolve, reject := vm.NewPromise()
+	promise, resolve, reject := loop.CreatePromise(vm)
 
 	go func() {
 		for {
@@ -59,72 +58,54 @@ func (tr *TarReader) ExtractTo(call goja.FunctionCall, vm *goja.Runtime) goja.Va
 				if errors.Is(err, io.EOF) {
 					break
 				}
-				async(func(vm *goja.Runtime) {
-					reject(vm.ToValue(fmt.Errorf(`读取时错误：%w`, err)))
-				})
+				reject(vm.ToValue(fmt.Errorf(`读取时错误：%w`, err)))
 				return
 			}
 
 			if !filepath.IsLocal(hdr.Name) {
-				async(func(vm *goja.Runtime) {
-					reject(vm.ToValue(fmt.Errorf(`错误的文件路径：%s`, hdr.Name)))
-				})
+				reject(vm.ToValue(fmt.Errorf(`错误的文件路径：%s`, hdr.Name)))
 				return
 			}
 
 			switch hdr.Typeflag {
 			default:
-				async(func(vm *goja.Runtime) {
-					reject(vm.ToValue(fmt.Errorf(`未知文件类型：%d`, hdr.Typeflag)))
-				})
+				reject(vm.ToValue(fmt.Errorf(`未知文件类型：%d`, hdr.Typeflag)))
 				return
 			case tar.TypeDir:
 				if err := os.MkdirAll(filepath.Join(outputDir, hdr.Name), 0755); err != nil {
-					async(func(vm *goja.Runtime) {
-						reject(vm.ToValue(fmt.Errorf(`目录创建失败：%w`, err)))
-					})
+					reject(vm.ToValue(fmt.Errorf(`目录创建失败：%w`, err)))
 					return
 				}
 			case tar.TypeReg:
 				dir, _ := path.Split(hdr.Name)
 				if err := os.MkdirAll(filepath.Join(outputDir, dir), 0755); err != nil {
-					async(func(vm *goja.Runtime) {
-						reject(vm.ToValue(fmt.Errorf(`目录创建失败：%w`, err)))
-					})
+					reject(vm.ToValue(fmt.Errorf(`目录创建失败：%w`, err)))
 					return
 				}
 
 				outputFile := filepath.Join(outputDir, hdr.Name)
 				fp, err := os.Create(outputFile)
 				if err != nil {
-					async(func(vm *goja.Runtime) {
-						reject(vm.ToValue(fmt.Errorf(`文件创建失败：%w`, err)))
-					})
+					reject(vm.ToValue(fmt.Errorf(`文件创建失败：%w`, err)))
 					return
 				}
 
 				if _, err := io.Copy(fp, tr.underlying); err != nil {
 					fp.Close()
 					os.Remove(outputFile)
-					async(func(vm *goja.Runtime) {
-						reject(vm.ToValue(fmt.Errorf(`文件创建失败：%w`, err)))
-					})
+					reject(vm.ToValue(fmt.Errorf(`文件创建失败：%w`, err)))
 					return
 				}
 
 				if err := fp.Close(); err != nil {
 					os.Remove(outputFile)
-					async(func(vm *goja.Runtime) {
-						reject(vm.ToValue(fmt.Errorf(`文件关闭失败：%w`, err)))
-					})
+					reject(vm.ToValue(fmt.Errorf(`文件关闭失败：%w`, err)))
 					return
 				}
 			}
 		}
 
-		async(func(vm *goja.Runtime) {
-			resolve(goja.Undefined())
-		})
+		resolve(goja.Undefined())
 	}()
 
 	return vm.ToValue(promise)

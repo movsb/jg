@@ -1,59 +1,42 @@
-package loop
+package jr
 
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/eventloop"
+	"github.com/movsb/jg/runtime/loop"
+	"github.com/movsb/jg/utils"
 )
-
-func GetRunAsync(vm *goja.Runtime) func(func(vm *goja.Runtime)) {
-	rt := vm.Get(`__loop`).Export().(*Runtime)
-	return rt.RunAsync
-}
-
-func CreatePromise(vm *goja.Runtime) (_ *goja.Promise, _, _ func(value any)) {
-	promise, resolve, reject := vm.NewPromise()
-	return promise,
-		func(value any) {
-			GetRunAsync(vm)(func(vm *goja.Runtime) {
-				resolve(value)
-			})
-		},
-		func(value any) {
-			GetRunAsync(vm)(func(vm *goja.Runtime) {
-				reject(value)
-			})
-		}
-}
-
-func Panic(vm *goja.Runtime, format string, args ...any) {
-	panic(vm.ToValue(fmt.Errorf(format, args...)))
-}
 
 // JavaScript 运行时，必要时移出去作为公共模块。
 type Runtime struct {
 	ev *eventloop.EventLoop
 }
 
-func NewRuntime(ctx context.Context, libs ...[]byte) (*Runtime, error) {
+var _ loop.Runtime = (*Runtime)(nil)
+
+func MustNewRuntime(ctx context.Context, options ...Option) *Runtime {
+	return utils.Must1(NewRuntime(ctx, options...))
+}
+
+func NewRuntime(ctx context.Context, options ...Option) (*Runtime, error) {
 	rt := &Runtime{ev: eventloop.NewEventLoop()}
 
-	rt.Run(func(r *goja.Runtime) {
-		console.Enable(r)
-		for _, lib := range libs {
-			_, err := r.RunString(string(lib))
-			if err != nil {
-				panic(err)
-			}
-		}
+	rt.Run(func(vm *goja.Runtime) {
+		vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
+		console.Enable(vm)
+		vm.Set(`__loop`, rt)
+		vm.Set(`runtime`, _common)
+		vm.Set(`panic`, _common[`panic`])
 	})
 
-	rt.Run(func(r *goja.Runtime) {
-		r.Set(`__loop`, rt)
-	})
+	for _, opt := range options {
+		opt(rt)
+	}
 
 	return rt, nil
 }
@@ -98,7 +81,29 @@ func (r *Runtime) Execute(ctx context.Context, script string, arguments ...Argum
 	return val.Export(), nil
 }
 
-func (r *Runtime) WaitForPromise(p *goja.Promise) {
+func (r *Runtime) ExecuteFile(ctx context.Context, file string) (any, error) {
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	output, err := r.Execute(ctx, string(b))
+	if err != nil {
+		return nil, err
+	}
+
+	if promise, ok := output.(*goja.Promise); ok {
+		r.waitForPromise(promise)
+		if promise.State() == goja.PromiseStateRejected {
+			return nil, fmt.Errorf(`%v`, promise.Result().Export())
+		}
+		return promise.Result().Export(), nil
+	}
+
+	return output, nil
+}
+
+func (r *Runtime) waitForPromise(p *goja.Promise) {
 	var timer *eventloop.Interval
 	timer = r.ev.SetInterval(func(rt *goja.Runtime) {
 		if p.State() != goja.PromiseStatePending {

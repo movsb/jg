@@ -1,4 +1,4 @@
-package jg_runtime
+package jr
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"runtime"
 )
 
-var Map = map[string]any{
+var _common = map[string]any{
 	`os`:    runtime.GOOS,
 	`arch`:  runtime.GOARCH,
 	`args`:  os.Args,
