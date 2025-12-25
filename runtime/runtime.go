@@ -2,6 +2,7 @@ package loop
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
@@ -11,6 +12,25 @@ import (
 func GetRunAsync(vm *goja.Runtime) func(func(vm *goja.Runtime)) {
 	rt := vm.Get(`__loop`).Export().(*Runtime)
 	return rt.RunAsync
+}
+
+func CreatePromise(vm *goja.Runtime) (_ *goja.Promise, _, _ func(value any)) {
+	promise, resolve, reject := vm.NewPromise()
+	return promise,
+		func(value any) {
+			GetRunAsync(vm)(func(vm *goja.Runtime) {
+				resolve(value)
+			})
+		},
+		func(value any) {
+			GetRunAsync(vm)(func(vm *goja.Runtime) {
+				reject(value)
+			})
+		}
+}
+
+func Panic(vm *goja.Runtime, format string, args ...any) {
+	panic(vm.ToValue(fmt.Errorf(format, args...)))
 }
 
 // JavaScript 运行时，必要时移出去作为公共模块。

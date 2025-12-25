@@ -66,7 +66,7 @@ func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	if len(call.Arguments) >= 2 {
 		types = utils.MustBeString(call.Argument(1), vm)
 	} else {
-		types = `fd`
+		types = `fdls`
 	}
 
 	stat, err := os.Stat(filePath)

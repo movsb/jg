@@ -26,6 +26,7 @@ func main() {
 	})
 	rt.Run(func(rt *goja.Runtime) {
 		rt.Set(`runtime`, jg_runtime.Map)
+		rt.Set(`panic`, jg_runtime.Map[`panic`])
 		rt.Set(`http`, jg_http.Methods)
 		rt.Set(`fs`, jg_fs.Methods)
 		rt.Set(`path`, &jg_path.Path{})

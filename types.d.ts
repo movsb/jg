@@ -12,9 +12,22 @@ declare global {
 		 * Program arguments passed from command line.
 		 */
 		export const args: string[];
+		/**
+		 * Print panic info and exit.
+		 */
+		function panic(args: any[]);
 	}
+	/**
+	 * Print panic info and exit.
+	 */
+	function panic(...args: any[]);
 	namespace io {
-		export class Reader {}
+		export class Reader {
+			/**
+			 * fake method to enable ts-check, or else any value type can be used as io.Reader.
+			 */
+			read(p: Uint8Array): number;
+		}
 	}
 	namespace fs {
 		function saveToFile(filePath: string, data: io.Reader): Promise<number>;
@@ -31,6 +44,7 @@ declare global {
 		 * @param types     File types to match.
 		 * 
 		 * e.g: 'fd' means either file or directory exists. 'fx' means file exists and executable.
+		 * it's by default 'fdls'.
 		 * 
 		 *  OR-ed
 		 *      - 'f' file
@@ -48,6 +62,10 @@ declare global {
 	namespace archive {
 		export class TarReader {
 			constructor(input: io.Reader);
+			extractTo(dir: string): Promise<void>;
+		}
+		export class ZipReader {
+			constructor(filePath: string);
 			extractTo(dir: string): Promise<void>;
 		}
 	}

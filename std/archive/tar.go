@@ -16,6 +16,7 @@ import (
 
 var Methods = map[string]any{
 	`TarReader`: newTarReader,
+	`ZipReader`: newZipReader,
 }
 
 type TarReader struct {
