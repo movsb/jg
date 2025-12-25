@@ -12,6 +12,9 @@ import (
 )
 
 var Methods = map[string]any{
+	`mkDir`:    mkDir,
+	`mkDirAll`: mkDirAll,
+
 	`saveToFile`: saveToFile,
 
 	`fileExists`: fileExists,
@@ -103,4 +106,36 @@ func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	}
 
 	return vm.ToValue(orMatch && andMatch)
+}
+
+func mkDir(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	return _mkDir(call, vm, false)
+}
+
+func mkDirAll(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	return _mkDir(call, vm, true)
+}
+
+func _mkDir(call goja.FunctionCall, vm *goja.Runtime, all bool) goja.Value {
+	path := utils.MustBeString(call.Argument(0), vm)
+
+	perm := fs.FileMode(0755)
+	if len(call.Arguments) >= 2 {
+		var n int32
+		if err := vm.ExportTo(call.Argument(1), &n); err != nil {
+			panic(vm.ToValue(err))
+		}
+		perm = fs.FileMode(n)
+	}
+
+	fn := os.Mkdir
+	if all {
+		fn = os.MkdirAll
+	}
+
+	if err := fn(path, perm); err != nil {
+		panic(vm.ToValue(err))
+	}
+
+	return nil
 }

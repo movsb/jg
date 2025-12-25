@@ -30,6 +30,19 @@ declare global {
 		}
 	}
 	namespace fs {
+		/**
+		 * Mkdir creates a new directory with the specified name and permission bits (before umask).
+		 */
+		function mkDir(path: string, perm?: number);
+		/**
+		 * MkdirAll creates a directory named path, along with any necessary parents.
+		 * The permission bits perm (before umask) are used for all directories that MkdirAll creates.
+		 * If path is already a directory, MkdirAll does nothing.
+		 * 
+		 * @param path 
+		 * @param perm 
+		 */
+		function mkDirAll(path: string, perm?: number);
 		function saveToFile(filePath: string, data: io.Reader): Promise<number>;
 		/**
 		 * Checks if the specified file or directory exists.

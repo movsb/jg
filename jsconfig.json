@@ -6,6 +6,6 @@
 	},
 	"include": [
 		"**/*.js",
-		"types.d.ts"
+		"std/types.d.ts"
 	]
 }
