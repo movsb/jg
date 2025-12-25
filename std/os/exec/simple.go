@@ -1,6 +1,7 @@
 package jg_exec
 
 import (
+	"bytes"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -40,31 +41,45 @@ func taggedCommand(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 		panic(vm.ToValue(fmt.Errorf(`only simple command supported now`)))
 	}
 
-	for _, arg := range callExpr.Args {
-		for i, part := range arg.Parts {
-			if pp, ok := part.(*syntax.ParamExp); ok {
+	var recurse func(parts []syntax.WordPart)
+	recurse = func(parts []syntax.WordPart) {
+		for i, part := range parts {
+			switch typed := part.(type) {
+			default:
+				panic(vm.ToValue(fmt.Sprintf(`unhandled word part: %T, %v`, part, part)))
+			case *syntax.Lit:
+				continue
+			case *syntax.ParamExp:
 				var n int
-				if _, err := fmt.Sscanf(pp.Param.Value, `__%d`, &n); err != nil {
-					panic(vm.ToValue(fmt.Errorf(`unknown expression: %s`, pp.Param.Value)))
+				if _, err := fmt.Sscanf(typed.Param.Value, `__%d`, &n); err != nil {
+					panic(vm.ToValue(fmt.Errorf(`unknown expression: %s`, typed.Param.Value)))
 				}
-				arg.Parts[i] = &syntax.Lit{
+				parts[i] = &syntax.Lit{
 					Value: interpolates[n].String(),
 				}
+			case *syntax.DblQuoted:
+				recurse(typed.Parts)
 			}
 		}
 	}
 
+	for _, arg := range callExpr.Args {
+		recurse(arg.Parts)
+	}
+
+	printer := syntax.NewPrinter()
 	args = args[:0]
 	for _, arg := range callExpr.Args {
-		lit := arg.Lit()
-		if lit == `` {
-			panic(vm.ToValue(`invalid word literal interpolation`))
+		buf := bytes.NewBuffer(nil)
+		if err := printer.Print(buf, arg); err != nil {
+			panic(vm.ToValue(fmt.Errorf(`failed to print: %w`, err)))
 		}
-		args = append(args, lit)
+		args = append(args, buf.String())
 	}
 
 	myCmd := &Command{
 		underlying: exec.Command(args[0], args[1:]...),
 	}
+
 	return vm.ToValue(myCmd).(*goja.Object)
 }
