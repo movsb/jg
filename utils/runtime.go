@@ -32,3 +32,13 @@ func Must1[T any](t T, err error) T {
 	Must(err)
 	return t
 }
+
+func CatchAsError(err *error) {
+	if er := recover(); er != nil {
+		if er2, ok := er.(error); ok {
+			*err = er2
+			return
+		}
+		*err = fmt.Errorf(`%v`, er)
+	}
+}

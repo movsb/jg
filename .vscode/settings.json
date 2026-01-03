@@ -1,6 +1,7 @@
 {
 	"cSpell.ignoreWords": [
 		"goja",
-		"pathpkg"
+		"pathpkg",
+		"redir"
 	]
 }

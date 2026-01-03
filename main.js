@@ -1,4 +1,8 @@
-const a = 'f asdf';
-const cmd = $`echo 1 "${a+a}" bbb`;
-cmd.useStd(false, true, true);
-cmd.run()
+async function main() {
+	const name = 'vim';
+	const cmd = $`${name}`;
+	cmd.useStd(true, true, true);
+	return await cmd.run();
+}
+
+main();
