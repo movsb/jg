@@ -17,7 +17,9 @@ var Methods = map[string]any{
 
 	`saveToFile`: saveToFile,
 
+	`exists`:     exists,
 	`fileExists`: fileExists,
+	`dirExists`:  dirExists,
 
 	`sha256`: sha256sum,
 }
@@ -63,21 +65,11 @@ func saveToFile(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	return vm.ToValue(promise)
 }
 
-func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
-	filePath := utils.MustBeString(call.Argument(0), vm)
-
-	var types string
-
-	if len(call.Arguments) >= 2 {
-		types = utils.MustBeString(call.Argument(1), vm)
-	} else {
-		types = `fdls`
-	}
-
+func _exists(vm *goja.Runtime, filePath string, types string) bool {
 	stat, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return vm.ToValue(false)
+			return false
 		}
 		panic(vm.ToValue(fmt.Errorf(`判断存在时出错：%s: %w`, filePath, err)))
 	}
@@ -87,6 +79,8 @@ func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 
 	for _, t := range types {
 		switch t {
+		case '*':
+			orMatch = true
 		case 'f':
 			orMatch = orMatch || stat.Mode().IsRegular()
 		case 'd':
@@ -105,7 +99,28 @@ func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 		}
 	}
 
-	return vm.ToValue(orMatch && andMatch)
+	return orMatch && andMatch
+}
+
+func exists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	filePath := utils.MustBeString(call.Argument(0), vm)
+
+	types := `*`
+	if len(call.Arguments) > 2 {
+		types = utils.MustBeString(call.Argument(1), vm)
+	}
+
+	return vm.ToValue(_exists(vm, filePath, types))
+}
+
+func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	filePath := utils.MustBeString(call.Argument(0), vm)
+	return vm.ToValue(_exists(vm, filePath, `f`))
+}
+
+func dirExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	dirPath := utils.MustBeString(call.Argument(0), vm)
+	return vm.ToValue(_exists(vm, dirPath, `d`))
 }
 
 func mkDir(call goja.FunctionCall, vm *goja.Runtime) goja.Value {

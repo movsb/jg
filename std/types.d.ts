@@ -45,14 +45,7 @@ declare global {
 		function mkDirAll(path: string, perm?: number);
 		function saveToFile(filePath: string, data: io.Reader): Promise<number>;
 		/**
-		 * Checks if the specified file or directory exists.
-		 * 
-		 * @param filePath 
-		 */
-		function fileExists(filePath: string): boolean;
-		/**
-		 * Checks if the specified file or directory exists.
-		 * 
+		 * Checks if filePath exists, no matter what kind it is.
 		 * @param filePath 
 		 * @param types     File types to match.
 		 * 
@@ -70,7 +63,19 @@ declare global {
 		 *      - 'w' writable
 		 *      - 'r' readable
 		 */
-		function fileExists(filePath: string, types: string): boolean;
+		function exists(filePath: string, types?: string): boolean;
+		/**
+		 * Checks if the specified regular file (not directory, not socket, ...) exists.
+		 * 
+		 * @param filePath 
+		 */
+		function fileExists(filePath: string): boolean;
+		/**
+		 * Checks if the specified directory (not regular file, not socket, ...) exists.
+		 * 
+		 * @param filePath 
+		 */
+		function dirExists(dirPath: string): boolean;
 		/**
 		 * Calculates the sha256 sum of a file.
 		 * 
