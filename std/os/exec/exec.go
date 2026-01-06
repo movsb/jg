@@ -19,6 +19,7 @@ type Command struct {
 	underlying *exec.Cmd
 }
 
+// TODO: 实现 Thenable
 func (c *Command) Run(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	async := loop.GetRunAsync(vm)
 	promise, resolve, reject := vm.NewPromise()

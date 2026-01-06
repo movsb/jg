@@ -21,6 +21,14 @@ declare global {
 	 * Print panic info and exit.
 	 */
 	function panic(...args: any[]);
+	namespace time {
+		export class Time {
+			/**
+			 * returns unix timestamps (seconds).
+			 */
+			unix(): number;
+		}
+	}
 	namespace io {
 		export class Reader {
 			/**
@@ -84,6 +92,28 @@ declare global {
 		 * @returns the digest of the file with each byte represented by two lower-cased letters.
 		 */
 		function sha256(filePath: string): Promise<string>;
+		export class Stat {
+			/**
+			 * base name of the file.
+			 */
+			readonly name: string;
+			/**
+			 * length (in bytes) for regular files.
+			 */
+			readonly size: number;
+			/**
+			 * modification time.
+			 */
+			readonly modTime: time.Time;
+
+			readonly isDir: boolean;
+			readonly isRegular: boolean;
+		}
+		/**
+		 * Stat a path to report its info.
+		 * @param path 
+		 */
+		function stat(path: string): Stat;
 	}
 	namespace archive {
 		export class TarReader {

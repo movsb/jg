@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"time"
 
 	"github.com/dop251/goja"
 	"github.com/movsb/jg/runtime/loop"
@@ -17,6 +18,7 @@ var Methods = map[string]any{
 
 	`saveToFile`: saveToFile,
 
+	`stat`:       stat,
 	`exists`:     exists,
 	`fileExists`: fileExists,
 	`dirExists`:  dirExists,
@@ -121,6 +123,37 @@ func fileExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 func dirExists(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
 	dirPath := utils.MustBeString(call.Argument(0), vm)
 	return vm.ToValue(_exists(vm, dirPath, `d`))
+}
+
+type _Time struct {
+	t time.Time
+}
+
+func (t _Time) Unix() int64 {
+	return t.t.Unix()
+}
+
+type _Stat struct {
+	Name      string
+	Size      int64
+	ModTime   _Time
+	IsDir     bool
+	IsRegular bool
+}
+
+func stat(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
+	path := utils.MustBeString(call.Argument(0), vm)
+	stat, err := os.Stat(path)
+	if err != nil {
+		panic(vm.ToValue(err))
+	}
+	return vm.ToValue(_Stat{
+		Name:      stat.Name(),
+		Size:      stat.Size(),
+		ModTime:   _Time{stat.ModTime()},
+		IsDir:     stat.IsDir(),
+		IsRegular: stat.Mode().IsRegular(),
+	})
 }
 
 func mkDir(call goja.FunctionCall, vm *goja.Runtime) goja.Value {
